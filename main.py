@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import Optional, Dict
+from typing import Dict
 
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
