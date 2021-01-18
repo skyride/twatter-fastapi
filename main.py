@@ -1,6 +1,5 @@
 import json, os
 from uuid import UUID, uuid4
-from typing import Dict
 
 import aioredis
 from fastapi import FastAPI, status
@@ -32,9 +31,12 @@ async def list_items():
     """
     List all items.
     """
-    return [
+    items = [
         json.loads(await app.state.redis.get(key))
         for key in await app.state.redis.keys("items:*")]
+    return {
+        "count": len(items),
+        "results": items}
 
 
 @app.get("/items/{pk}")
