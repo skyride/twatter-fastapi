@@ -1,12 +1,15 @@
+import os
 from uuid import UUID, uuid4
 from typing import Dict
 
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
+from redis import Redis
 from pydantic import BaseModel
 
 
 app = FastAPI()
+redis = Redis(os.environ.get("REDIS_URL", "127.0.0.1"))
 
 
 class Item(BaseModel):
@@ -22,7 +25,9 @@ def list_items():
     """
     List all items.
     """
-    return list(items.values())
+    return [
+        redis.get(key)
+        for key in redis.keys("items:*")]
 
 
 @app.get("/items/{pk}")
