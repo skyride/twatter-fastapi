@@ -1,4 +1,4 @@
-import os
+import json, os
 from uuid import UUID, uuid4
 from typing import Dict
 
@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 redis = Redis(os.environ.get("REDIS_URL", "127.0.0.1"))
+EXPIRES = 3600
 
 
 class Item(BaseModel):
@@ -26,7 +27,7 @@ def list_items():
     List all items.
     """
     return [
-        redis.get(key)
+        json.loads(redis.get(key))
         for key in redis.keys("items:*")]
 
 
@@ -49,7 +50,9 @@ def create_item(item: Item):
     Create a single item.
     """
     item.id = uuid4()
-    items[item.id] = item
+    redis.set(
+        f"items:{item.id}", json.dumps(item.dict(), default=str),
+        ex=EXPIRES)
     return item
 
 
