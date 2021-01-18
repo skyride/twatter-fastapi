@@ -18,9 +18,6 @@ class Item(BaseModel):
     name: str
 
 
-items: Dict[UUID, Item] = {}
-
-
 @app.get("/items/")
 def list_items():
     """
@@ -36,12 +33,13 @@ def get_item(pk: UUID):
     """
     Get a single item.
     """
-    if pk not in items:
+    item = redis.get(f"items:{pk}")
+    if item is None:
         return JSONResponse(
-        content={"message": "Not Found"},
-        status_code=status.HTTP_404_NOT_FOUND)
+            content={"message": "Not Found"},
+            status_code=status.HTTP_404_NOT_FOUND)
 
-    return items[pk]
+    return json.loads(item)
 
 
 @app.post("/items/")
@@ -61,12 +59,14 @@ def update_item(pk: UUID, item: Item):
     """
     Update a single item.
     """
-    if pk not in items:
+    if not redis.exists(f"items:{pk}"):
         return JSONResponse(
         content={"message": "Not Found"},
         status_code=status.HTTP_404_NOT_FOUND)
 
     item.id = pk
-    items[pk] = item
+    redis.set(
+        f"items:{item.id}", json.dumps(item.dict(), default=str),
+        ex=EXPIRES)
 
     return item
