@@ -34,6 +34,7 @@ async def list_items():
     items = [
         json.loads(await app.state.redis.get(key))
         for key in await app.state.redis.keys("items:*")]
+
     return {
         "count": len(items),
         "results": items}
@@ -79,3 +80,18 @@ async def update_item(pk: UUID, item: Item):
         f"items:{item.id}", json.dumps(item.dict(), default=str))
 
     return item
+
+
+@app.delete("/items/{pk}")
+async def delete_item(pk: UUID):
+    """
+    Delete a single item.
+    """
+    if not await app.state.redis.exists(f"items:{pk}"):
+        return JSONResponse(
+        content={"message": "Not Found"},
+        status_code=status.HTTP_404_NOT_FOUND)
+
+    await app.state.redis.delete(f"items:{pk}")
+
+    return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
