@@ -30,16 +30,35 @@ def get_item(pk: UUID):
     """
     Get a single item.
     """
-    if pk in items:
-        return items[pk]
-
-    return JSONResponse(
+    if pk not in items:
+        return JSONResponse(
         content={"message": "Not Found"},
         status_code=status.HTTP_404_NOT_FOUND)
+
+    return items[pk]
 
 
 @app.post("/items/")
 def create_item(item: Item):
+    """
+    Create a single item.
+    """
     item.id = uuid4()
     items[item.id] = item
+    return item
+
+
+@app.put("/items/{pk}")
+def update_item(pk: UUID, item: Item):
+    """
+    Update a single item.
+    """
+    if pk not in items:
+        return JSONResponse(
+        content={"message": "Not Found"},
+        status_code=status.HTTP_404_NOT_FOUND)
+
+    item.id = pk
+    items[pk] = item
+
     return item
